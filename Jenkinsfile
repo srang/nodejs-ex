@@ -27,15 +27,11 @@ pipeline {
             steps {
                 script {
                     openshift.withCluster() {
-                        openshift.logLevel(3)
                         openshift.withProject() {
                             def buildConfig = openshift.selector("bc", "misc-data")
                             def build = buildConfig.startBuild()
-                            build.describe()
                             build.logs('-f')
-                            buildConfig.related('builds').untilEach(1) {
-                                return (it.object().status.phase == "Complete")
-                            }
+                            build.object().status == "Completed"
                         }
                     }
                 } // script
@@ -45,12 +41,12 @@ pipeline {
             steps {
                 script {
                     openshift.withCluster() {
-                        openshift.logLevel(3)
                         openshift.withProject() {
-                            def rm = openshift.selector("dc", "misc-data").rollout()
+                            openshift.tag("misc-data:latest", "misc-data:dev")
                             openshift.selector("dc", "misc-data").related('pods').untilEach(1) {
                                 return (it.object().status.phase == "Running")
                             }
+                            openshift.selector("dc", "misc-data").rollout().status("-w")
                         }
                     }
                 } // script
