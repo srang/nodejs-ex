@@ -43,9 +43,6 @@ pipeline {
                     openshift.withCluster() {
                         openshift.withProject() {
                             openshift.tag("misc-data:latest", "misc-data:dev")
-                            openshift.selector("dc", "misc-data").related('pods').untilEach(1) {
-                                return (it.object().status.phase == "Running")
-                            }
                             openshift.selector("dc", "misc-data").rollout().status("-w")
                         }
                     }
