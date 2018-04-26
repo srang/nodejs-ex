@@ -34,9 +34,8 @@ pipeline {
                 script {
                     openshift.withCluster() {
                         openshift.withProject() {
-                            def buildConfig = openshift.selector("bc", "misc-data"))
-                            def buildSelector = buildConfig.startBuild()
-                            buildSelector.logs('-f')
+                            def buildConfig = openshift.selector("bc", "misc-data")
+                            buildConfig.startBuild()
                         }
                     }
                 } // script
