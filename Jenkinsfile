@@ -1,10 +1,4 @@
-// path of the template to use
-def templatePath = 'https://raw.githubusercontent.com/openshift/nodejs-ex/master/openshift/templates/nodejs-mongodb.json'
-// name of the template that will be created
-def templateName = 'nodejs-mongodb-example'
-// NOTE, the "pipeline" directive/closure from the declarative pipeline syntax needs to include, or be nested outside,
-// and "openshift" directive/closure from the OpenShift Client Plugin for Jenkins.  Otherwise, the declarative pipeline engine
-// will not be fully engaged.
+
 pipeline {
     agent {
       node {
@@ -33,9 +27,15 @@ pipeline {
             steps {
                 script {
                     openshift.withCluster() {
+                        openshift.logLevel(3)
                         openshift.withProject() {
                             def buildConfig = openshift.selector("bc", "misc-data")
-                            buildConfig.startBuild()
+                            def build = buildConfig.startBuild()
+                            build.describe()
+                            build.logs('-f')
+                            buildConfig.related('builds').untilEach(1) {
+                                return (it.object().status.phase == "Complete")
+                            }
                         }
                     }
                 } // script
@@ -45,6 +45,7 @@ pipeline {
             steps {
                 script {
                     openshift.withCluster() {
+                        openshift.logLevel(3)
                         openshift.withProject() {
                             def rm = openshift.selector("dc", "misc-data").rollout()
                             openshift.selector("dc", "misc-data").related('pods').untilEach(1) {
@@ -60,7 +61,6 @@ pipeline {
                 script {
                     openshift.withCluster() {
                         openshift.withProject() {
-
                             openshift.tag("misc-data:latest", "misc-data:stage")
                         }
                     }
